@@ -1,44 +1,39 @@
-require('dotenv').config();
+require('dotenv').config(); // Load .env variables
+
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const cors = require('cors');
-const ticketRoutes = require('./routes/ticket');
-const userRoutes = require('./routes/user');
-
-dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.error('MongoDB connection error:', err));
-
-// Routes
-app.use('/api/tickets', ticketRoutes);
-app.use('/api', userRoutes); // For /register and future user-related routes
-
-// Root endpoint
-app.get('/', (req, res) => {
-  res.send('API is running...');
+.then(() => {
+  console.log('MongoDB connected!');
+})
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
 });
 
-// Error handling middleware (optional, but recommended)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+// Simple home route for testing
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
+// Example protected route (you can replace with your own)
+app.get('/api/protected', (req, res) => {
+  res.json({ message: 'This is a protected route.' });
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
