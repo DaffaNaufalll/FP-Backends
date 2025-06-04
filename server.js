@@ -1,10 +1,11 @@
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -22,13 +23,19 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('MongoDB connection error:', err);
 });
 
-// Example home route
+// Root route for testing
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
 
-// ----- Put this at the END of your server.js -----
-const PORT = process.env.PORT || 8080;
+// Registration route (stub implementation)
+app.post('/api/register', (req, res) => {
+  // Example: log the incoming data and reply
+  console.log('Register data:', req.body);
+  res.json({ message: 'Register endpoint works!', data: req.body });
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
