@@ -1,27 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const User = require('./user');
-const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 
-// Register route (POST /api/register)
-router.post('/register', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = new User({ email, password: hashedPassword });
-    await user.save();
-
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  password: {
+    type: String,
+    required: true
   }
+  // Add other fields here if needed (e.g., name, role)
+}, {
+  timestamps: true
 });
 
-module.exports = router;
+module.exports = mongoose.model('User', UserSchema);
