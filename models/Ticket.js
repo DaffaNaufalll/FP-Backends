@@ -28,7 +28,7 @@ const ticketSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  updatedAt: Date,
+  updatedAt: Date
   // Add more fields as needed...
 });
 
