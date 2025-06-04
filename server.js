@@ -1,11 +1,10 @@
-require('dotenv').config(); // Load .env variables
+require('dotenv').config(); // Load environment variables from .env
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -23,17 +22,13 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('MongoDB connection error:', err);
 });
 
-// Simple home route for testing
+// Example home route
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
 
-// Example protected route (you can replace with your own)
-app.get('/api/protected', (req, res) => {
-  res.json({ message: 'This is a protected route.' });
-});
-
-// Start server
+// ----- Put this at the END of your server.js -----
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
