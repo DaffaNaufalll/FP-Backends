@@ -7,7 +7,6 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -16,34 +15,33 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => {
-  console.log('MongoDB connected!');
-})
-.catch((err) => {
-  console.error('MongoDB connection error:', err);
-});
+.then(() => console.log('MongoDB connected!'))
+.catch((err) => console.error('MongoDB connection error:', err));
 
-// Example User schema/model (ideally in a separate file)
+// User Schema
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String, // NOTE: In production, store hashed passwords!
+  password: String, // NOTE: Hash in production!
   role: String
 });
 const User = mongoose.model('User', userSchema);
 
-// Root route for sanity check
-app.get('/', (req, res) => {
-  res.send('API is running!');
+// Ticket Schema
+const ticketSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  status: { type: String, default: "open" },
+  createdBy: String, // user's email or user id
+  createdAt: { type: Date, default: Date.now }
 });
+const Ticket = mongoose.model('Ticket', ticketSchema);
 
-// Registration route for creating users with role
+// User registration (for testing/demo)
 app.post('/api/register', async (req, res) => {
   const { email, password, role } = req.body;
   try {
     const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
+    if (existing) return res.status(400).json({ error: 'User already exists' });
     const user = await User.create({ email, password, role });
     res.json({ message: 'User registered!', user });
   } catch (err) {
@@ -51,23 +49,47 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// LOGIN ENDPOINT
+// User login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    // In production, compare hashed passwords!
     const user = await User.findOne({ email, password });
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    // In production, generate and return a real JWT token!
-    res.json({ token: 'mock-token', role: user.role });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    // In production, generate JWT
+    res.json({ token: 'mock-token', role: user.role, email: user.email });
   } catch (err) {
     res.status(500).json({ error: 'Login failed', details: err });
   }
 });
 
-// Start server
+// Create Ticket (expects user email in body)
+app.post('/api/tickets', async (req, res) => {
+  const { title, description, email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Missing user email' });
+  try {
+    const ticket = await Ticket.create({ title, description, createdBy: email });
+    res.json({ message: 'Ticket created', ticket });
+  } catch (err) {
+    res.status(500).json({ error: 'Ticket creation failed', details: err });
+  }
+});
+
+// Get "My Tickets" (by email, pass email as query or in token)
+app.get('/api/my-tickets', async (req, res) => {
+  const { email } = req.query; // or get email from token
+  if (!email) return res.status(400).json({ error: 'Missing user email' });
+  try {
+    const tickets = await Ticket.find({ createdBy: email }).sort({ createdAt: -1 });
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch tickets', details: err });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send('API is running!');
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
