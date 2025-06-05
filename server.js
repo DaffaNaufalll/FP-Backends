@@ -26,10 +26,11 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Ticket Schema
+// Ticket Schema (now includes priority)
 const ticketSchema = new mongoose.Schema({
   title: String,
   description: String,
+  priority: { type: String, default: "Low" }, // <-- added priority!
   status: { type: String, default: "open" },
   createdBy: String, // user's email or user id
   createdAt: { type: Date, default: Date.now }
@@ -64,10 +65,10 @@ app.post('/api/login', async (req, res) => {
 
 // Create Ticket (expects user email in body)
 app.post('/api/tickets', async (req, res) => {
-  const { title, description, email } = req.body;
+  const { title, description, priority, email } = req.body; // <-- now expects priority from frontend
   if (!email) return res.status(400).json({ error: 'Missing user email' });
   try {
-    const ticket = await Ticket.create({ title, description, createdBy: email });
+    const ticket = await Ticket.create({ title, description, priority, createdBy: email }); // <-- includes priority
     res.json({ message: 'Ticket created', ticket });
   } catch (err) {
     res.status(500).json({ error: 'Ticket creation failed', details: err });
