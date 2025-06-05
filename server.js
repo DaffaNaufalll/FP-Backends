@@ -23,23 +23,27 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('MongoDB connection error:', err);
 });
 
-// Example User model (you should define this in a separate file)
+// Example User schema/model (ideally in a separate file)
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String, // In production, store hashed!
+  password: String, // NOTE: In production, store hashed passwords!
   role: String
 });
 const User = mongoose.model('User', userSchema);
 
-// Root route for testing
+// Root route for sanity check
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
 
-// Registration route
+// Registration route for creating users with role
 app.post('/api/register', async (req, res) => {
   const { email, password, role } = req.body;
   try {
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
     const user = await User.create({ email, password, role });
     res.json({ message: 'User registered!', user });
   } catch (err) {
@@ -47,15 +51,16 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Login route
+// LOGIN ENDPOINT
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email, password }); // NOTE: In production, use password hashing!
+    // In production, compare hashed passwords!
+    const user = await User.findOne({ email, password });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    // In production, generate a JWT or session here
+    // In production, generate and return a real JWT token!
     res.json({ token: 'mock-token', role: user.role });
   } catch (err) {
     res.status(500).json({ error: 'Login failed', details: err });
